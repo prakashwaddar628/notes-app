@@ -9,8 +9,8 @@ from app.core.config import settings
 # password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = settings.secret_key
-ALGORITHM = settings.algorithm
+SECRET_KEY = "supersecret-key-change-this"
+ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 def get_password_hash(password: str) -> str:

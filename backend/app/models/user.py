@@ -1,5 +1,5 @@
-from sqlachemy import Column, Integer, String, DateTime, func
-from app.db.base_class import Base
+from sqlalchemy import Column, Integer, String, DateTime, func
+from app.db.session import Base
 
 class User(Base):
     __tablename__ = "users"

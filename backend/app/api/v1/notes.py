@@ -55,3 +55,36 @@ def get_note(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
     return note
 
+@router.put("/{note_id}", response_model=NoteRead)
+def update_note(
+    note_id: int,
+    note_in: NoteUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    note = (
+        db.query(Note)
+        .filter(Note.id == note_id, Note.user_id == current_user.id)
+        .first()
+    )
+    if not note:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+    
+    # check version for optimistic concurrency control
+    if note.version != note_in.version:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Note has been modified by another process",
+        )
+    
+    # update fields
+    if note_in.title is not None:
+        note.title = note_in.title
+    if note_in.content is not None:
+        note.content = note_in.content
+    
+    note.version += 1
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return note

@@ -27,3 +27,15 @@ def create_note(
     db.refresh(note)
     return note
 
+@router.get("/", response_model=List[NoteRead])
+def list_notes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    notes = (
+        db.query(Note)
+        .filter(Note.user_id == current_user.id, Note.is_archived == False)
+        .order_by(Note.updated_at.desc())
+        .all()
+    )
+    return notes

@@ -29,6 +29,9 @@ def create_note(
     db.add(note)
     db.commit()
     db.refresh(note)
+    # update cache
+    cache_key = f"user:{current_user.id}:notes"
+    redis_client.delete(cache_key)
     return note
 
 @router.get("/", response_model=List[NoteRead])
@@ -77,6 +80,11 @@ def update_note(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Update a note with optimistic concurrency control.
+    The client must provide the current version of the note.
+    add cache invalidation
+    """
     note = (
         db.query(Note)
         .filter(Note.id == note_id, Note.user_id == current_user.id)
@@ -102,6 +110,9 @@ def update_note(
     db.add(note)
     db.commit()
     db.refresh(note)
+    # invalidate cache
+    cache_key = f"user:{current_user.id}:notes"
+    redis_client.delete(cache_key)
     return note
 
 @router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -110,6 +121,10 @@ def delete_note(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Delete a note.
+    Invalidate cache upon deletion.
+    """
     note = (
         db.query(Note)
         .filter(Note.id == note_id, Note.user_id == current_user.id)
@@ -120,4 +135,7 @@ def delete_note(
     
     db.delete(note)
     db.commit()
+    # invalidate cache
+    cache_key = f"user:{current_user.id}:notes"
+    redis_client.delete(cache_key)
     return

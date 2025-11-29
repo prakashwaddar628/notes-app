@@ -8,6 +8,10 @@ from app.models.user import User
 from app.schemas.note import NoteCreate, NoteRead, NoteUpdate
 from app.core.security import get_current_user
 
+# redis
+from app.core.redis import redis_client
+import json
+
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 @router.post("/", response_model=NoteRead)
@@ -32,12 +36,23 @@ def list_notes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    cache_key = f"user:{current_user.id}:notes"
+
+    # check cache
+    cached = redis_client.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    
+    # fetch from db
     notes = (
         db.query(Note)
         .filter(Note.user_id == current_user.id, Note.is_archived == False)
         .order_by(Note.updated_at.desc())
         .all()
     )
+
+    # store in cache for 60 seconds
+    redis_client.setex(cache_key, 60, json.dumps([note.__dict__ for note in notes], default=str))
     return notes
 
 @router.get("/{note_id}", response_model=NoteRead)

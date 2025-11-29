@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.deps import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
+from app.schemas.token import Token
 from app.core.security import (
     get_password_hash,
     verify_password,
@@ -32,9 +33,10 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-@router.post("/login")
+@router.post("/login", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):

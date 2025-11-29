@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.db.session import Base, engine
 from app.api.v1.auth import router as auth_router
+from app.api.v1.notes import router as notes_router
 
 app = FastAPI(title="Notes Sync API")
 
@@ -10,6 +11,7 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router)
+app.include_router(notes_router)
 
 @app.get("/health")
 def health_check():

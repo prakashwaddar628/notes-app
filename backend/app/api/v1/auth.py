@@ -13,9 +13,14 @@ from app.core.security import (
     verify_password,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_current_user,
 )
-
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.get("/me", response_model=UserRead)
+def read_current_user(current_user: User = Depends(get_current_user)):
+    return current_user
+
 
 @router.post("/register", response_model=UserRead)
 def register_user(user_in: UserCreate, db: Session = Depends(get_db)):

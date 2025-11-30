@@ -15,7 +15,7 @@ export default function LoginPage(){
         // error handling
         try {
             const formData = new URLSearchParams();
-            formData.append("email", email);
+            formData.append("username", email);
             formData.append("password", password);
 
             const res = await api.post("/auth/login", formData, {

@@ -13,6 +13,7 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selected, setSelected] = useState<Note | null>(null);
   const [status, setStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   const loadNotes = async () => {
@@ -43,7 +44,10 @@ export default function NotesPage() {
     setSelected(res.data);
   };
 
-  const saveNote = async (note: Note) => {
+  const saveNote = async (note: Note) => {  
+    if (isSaving) return;
+
+    setIsSaving(true);
     setStatus("Saving...");
     try {
       const res = await api.put<Note>(`/notes/${note.id}`, {
@@ -59,17 +63,29 @@ export default function NotesPage() {
     } catch (err: any) {
       if (err.response?.status === 409) {
         setStatus("Conflict detected. Please refresh.");
+
+        const latest = await api.get<Note>(`/notes/${note.id}`);
+        setSelected(latest.data);
+        setNotes((prev) =>
+          prev.map((n) => (n.id === latest.data.id ? latest.data : n))
+        );
       } else {
         setStatus("Error saving note");
       }
+    }finally{
+      setIsSaving(false)
     }
   };
 
   // auto-save after typing stops
   useEffect(() => {
     if (!selected) return;
+    setStatus("");
+
     const timeout = setTimeout(() => {
-      saveNote(selected);
+      if (!isSaving){
+        saveNote(selected);
+      }
     }, 800);
     return () => clearTimeout(timeout);
   }, [selected?.title, selected?.content]);

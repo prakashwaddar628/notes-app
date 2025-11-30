@@ -18,10 +18,12 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RateLimitMiddleware)
 
 @app.on_event("startup")
 def on_startup():
@@ -30,7 +32,6 @@ def on_startup():
 app.include_router(auth_router)
 app.include_router(notes_router)
 
-app.add_middleware(RateLimitMiddleware)
 
 @app.get("/health")
 def health_check():

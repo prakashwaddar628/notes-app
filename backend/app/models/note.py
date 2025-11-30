@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -13,7 +13,7 @@ class Note(Base):
     content = Column(Text, nullable=True)
 
     version = Column(Integer, default=1, nullable=False)
-    is_archived = Column(Integer, default=0, nullable=False)
+    is_archived = Column(Boolean, server_default="false", nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
